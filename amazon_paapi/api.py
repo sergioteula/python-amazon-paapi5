@@ -1,10 +1,10 @@
-"""Amazon Product Advertising API wrapper for Python
+"""Amazon Product Advertising API wrapper for Python.
 
 A simple Python wrapper for the last version of the Amazon Product Advertising API.
 """
 
 import time
-from typing import List, Union
+from typing import List, Optional, Union
 
 from . import models
 from .errors import InvalidArgument
@@ -27,6 +27,7 @@ class AmazonApi:
 
     Raises:
         ``InvalidArgumentException``
+
     """
 
     def __init__(
@@ -36,8 +37,8 @@ class AmazonApi:
         tag: str,
         country: models.Country,
         throttling: float = 1,
-        **kwargs
-    ):
+        **kwargs,
+    ) -> None:
         self._key = key
         self._secret = secret
         self._last_query_time = time.time() - throttling
@@ -50,7 +51,8 @@ class AmazonApi:
             self.region = models.regions.REGIONS[country]
             self.marketplace = "www.amazon." + models.regions.DOMAINS[country]
         except KeyError as error:
-            raise InvalidArgument("Country code is not correct") from error
+            msg = "Country code is not correct"
+            raise InvalidArgument(msg) from error
 
         self.api = DefaultApi(key, secret, self._host, self.region)
 
@@ -59,10 +61,10 @@ class AmazonApi:
         items: Union[str, List[str]],
         condition: models.Condition = None,
         merchant: models.Merchant = None,
-        currency_of_preference: str = None,
-        languages_of_preference: List[str] = None,
+        currency_of_preference: Optional[str] = None,
+        languages_of_preference: Optional[List[str]] = None,
         include_unavailable: bool = False,
-        **kwargs
+        **kwargs,
     ) -> List[models.Item]:
         """Get items information from Amazon.
 
@@ -91,8 +93,8 @@ class AmazonApi:
             ``MalformedRequestException``
             ``ApiRequestException``
             ``ItemsNotFoundException``
-        """
 
+        """
         kwargs.update(
             {
                 "condition": condition,
@@ -115,28 +117,28 @@ class AmazonApi:
 
     def search_items(
         self,  # NOSONAR
-        item_count: int = None,
-        item_page: int = None,
-        actor: str = None,
-        artist: str = None,
-        author: str = None,
-        brand: str = None,
-        keywords: str = None,
-        title: str = None,
+        item_count: Optional[int] = None,
+        item_page: Optional[int] = None,
+        actor: Optional[str] = None,
+        artist: Optional[str] = None,
+        author: Optional[str] = None,
+        brand: Optional[str] = None,
+        keywords: Optional[str] = None,
+        title: Optional[str] = None,
         availability: models.Availability = None,
-        browse_node_id: str = None,
+        browse_node_id: Optional[str] = None,
         condition: models.Condition = None,
-        currency_of_preference: str = None,
-        delivery_flags: List[str] = None,
-        languages_of_preference: List[str] = None,
+        currency_of_preference: Optional[str] = None,
+        delivery_flags: Optional[List[str]] = None,
+        languages_of_preference: Optional[List[str]] = None,
         merchant: models.Merchant = None,
-        max_price: int = None,
-        min_price: int = None,
-        min_saving_percent: int = None,
-        min_reviews_rating: int = None,
-        search_index: str = None,
+        max_price: Optional[int] = None,
+        min_price: Optional[int] = None,
+        min_saving_percent: Optional[int] = None,
+        min_reviews_rating: Optional[int] = None,
+        search_index: Optional[str] = None,
         sort_by: models.SortBy = None,
-        **kwargs
+        **kwargs,
     ) -> models.SearchResult:
         """Searches for items on Amazon based on a search query. At least one of the
         following parameters should be specified: ``keywords``, ``actor``, ``artist``,
@@ -195,8 +197,8 @@ class AmazonApi:
             ``MalformedRequestException``
             ``ApiRequestException``
             ``ItemsNotFoundException``
-        """
 
+        """
         kwargs.update(
             {
                 "item_count": item_count,
@@ -231,13 +233,13 @@ class AmazonApi:
     def get_variations(
         self,
         asin: str,
-        variation_count: int = None,
-        variation_page: int = None,
+        variation_count: Optional[int] = None,
+        variation_page: Optional[int] = None,
         condition: models.Condition = None,
-        currency_of_preference: str = None,
-        languages_of_preference: List[str] = None,
+        currency_of_preference: Optional[str] = None,
+        languages_of_preference: Optional[List[str]] = None,
         merchant: models.Merchant = None,
-        **kwargs
+        **kwargs,
     ) -> models.VariationsResult:
         """Returns a set of items that are the same product, but differ according to a
         consistent theme, for example size and color. A variation is a child ASIN.
@@ -268,8 +270,8 @@ class AmazonApi:
             ``MalformedRequestException``
             ``ApiRequestException``
             ``ItemsNotFoundException``
-        """
 
+        """
         asin = arguments.get_items_ids(asin)[0]
 
         kwargs.update(
@@ -292,8 +294,8 @@ class AmazonApi:
     def get_browse_nodes(
         self,
         browse_node_ids: List[str],
-        languages_of_preference: List[str] = None,
-        **kwargs
+        languages_of_preference: Optional[List[str]] = None,
+        **kwargs,
     ) -> List[models.BrowseNode]:
         """Returns the specified browse node's information like name, children and
         ancestors.
@@ -314,8 +316,8 @@ class AmazonApi:
             ``MalformedRequestException``
             ``ApiRequestException``
             ``ItemsNotFoundException``
-        """
 
+        """
         kwargs.update(
             {
                 "browse_node_ids": browse_node_ids,
@@ -328,7 +330,7 @@ class AmazonApi:
         self._throttle()
         return requests.get_browse_nodes_response(self, request)
 
-    def _throttle(self):
+    def _throttle(self) -> None:
         wait_time = self.throttling - (time.time() - self._last_query_time)
         if wait_time > 0:
             time.sleep(wait_time)
